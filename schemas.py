@@ -33,6 +33,7 @@ class Player(PlayerBase):
 
 class PlayerResult(BaseModel):
     id: int
+    runid: int
     name: str
     total_time: float
 

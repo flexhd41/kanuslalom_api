@@ -4,6 +4,11 @@ from typing import List, Optional
 from models import Player as PlayerModel, TimeEntry as TimeEntryModel
 from schemas import Player, PlayerCreate, PlayerResult
 from database import get_db
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -56,11 +61,15 @@ def get_results(player_id: Optional[int] = None, run_id: Optional[int] = None, d
     results = []
     
     for player in players:
-        total_time = 0
+        
         for entry in player.time_entries:
             if entry.start_time and entry.end_time:
                 if run_id is None or entry.run_id == run_id:
+                    total_time = 0
+                    logger.debug(entry.end_time)
+                    logger.debug(entry.start_time)
                     total_time += (entry.end_time - entry.start_time).total_seconds()
-        results.append(PlayerResult(id=player.id, name=player.name, total_time=total_time))
+                    
+                    results.append(PlayerResult(id=player.id, runid=entry.run_id, name=player.name, total_time=total_time))
     
     return results

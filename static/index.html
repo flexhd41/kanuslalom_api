@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Management</title>
+    <script>
+        async function addPlayer() {
+            const id = document.getElementById('playerId').value;
+            const name = document.getElementById('playerName').value;
+            const response = await fetch('/players/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: parseInt(id), name: name })
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        async function startTime() {
+            const timestamp = document.getElementById('startTimeTimestamp').value;
+            const response = await fetch(`/players/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ timestamp: new Date(timestamp).toISOString() })
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        async function stopTime() {
+            const timestamp = document.getElementById('stopTimeTimestamp').value;
+            const response = await fetch(`/players/stop`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ timestamp: new Date(timestamp).toISOString() })
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        async function addTime() {
+            const id = document.getElementById('playerIdForTime').value;
+            const runId = document.getElementById('runId').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            const response = await fetch(`/players/${id}/add_time`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ run_id: runId, start_time: new Date(startTime).toISOString(), end_time: new Date(endTime).toISOString() })
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        async function getPlayer() {
+            const id = document.getElementById('playerId').value;
+            const response = await fetch(`/players/${id}`, {
+                method: 'GET'
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        async function getAllPlayers() {
+            const response = await fetch('/players/', {
+                method: 'GET'
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        async function getResults() {
+            const response = await fetch('/results/', {
+                method: 'GET'
+            });
+            const results = await response.json();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            results.forEach(result => {
+                const resultElement = document.createElement('div');
+                resultElement.textContent = `Player ID: ${result.id}, Name: ${result.name}, Total Time: ${result.total_time} seconds`;
+                resultsDiv.appendChild(resultElement);
+            });
+        }
+
+        async function updateLeaderboard() {
+            const response = await fetch('/players/', {
+                method: 'GET'
+            });
+            const players = await response.json();
+            const leaderboard = document.getElementById('leaderboard');
+            leaderboard.innerHTML = '';
+            players.forEach(player => {
+                let total_time = 0;
+                player.time_entries.forEach(entry => {
+                    if (entry.start_time && entry.end_time) {
+                        const startTime = new Date(entry.start_time);
+                        const endTime = new Date(entry.end_time);
+                        total_time += (endTime - startTime) / 1000; // Convert milliseconds to seconds
+                    }
+                });
+                const playerElement = document.createElement('div');
+                playerElement.textContent = `Player ID: ${player.id}, Name: ${player.name}`;
+                playerElement.textContent += `, Total Time: ${total_time} seconds`;
+                leaderboard.appendChild(playerElement);
+            });
+        }
+
+        async function updateStarterNumber() {
+            const playerId = document.getElementById('playerIdForStarterNumber').value;
+            const starterNumber = document.getElementById('starterNumber').value;
+            const response = await fetch(`/players/${playerId}/starter_number`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ starter_number: parseInt(starterNumber) })
+            });
+            const result = await response.json();
+            alert(JSON.stringify(result));
+        }
+
+        // Update leaderboard every 5 seconds
+        setInterval(updateLeaderboard, 5000);
+    </script>
+</head>
+<body>
+    <h1>Player Management</h1>
+    <div>
+        <h2>Add Player</h2>
+        <input type="number" id="playerId" placeholder="Player ID">
+        <input type="text" id="playerName" placeholder="Player Name">
+        <button onclick="addPlayer()">Add Player</button>
+    </div>
+    <div>
+        <h2>Manage Time Entries</h2>
+        <input type="number" id="playerIdForTime" placeholder="Player ID">
+        <input type="number" id="runId" placeholder="Run ID">
+        <div>
+            <h3>Start Time</h3>
+            <input type="datetime-local" id="startTimeTimestamp" placeholder="Start Time">
+            <button onclick="startTime()">Start Time</button>
+        </div>
+        <div>
+            <h3>Stop Time</h3>
+            <input type="datetime-local" id="stopTimeTimestamp" placeholder="Stop Time">
+            <button onclick="stopTime()">Stop Time</button>
+        </div>
+        <div>
+            <h3>Add Time</h3>
+            <input type="datetime-local" id="startTime" placeholder="Start Time">
+            <input type="datetime-local" id="endTime" placeholder="End Time">
+            <button onclick="addTime()">Add Time</button>
+        </div>
+    </div>
+    <div>
+        <h2>Get Player</h2>
+        <button onclick="getPlayer()">Get Player</button>
+    </div>
+    <div>
+        <h2>Get All Players</h2>
+        <button onclick="getAllPlayers()">Get All Players</button>
+    </div>
+    <div>
+        <h2>Update Starter Number</h2>
+        <input type="number" id="playerIdForStarterNumber" placeholder="Player ID">
+        <input type="number" id="starterNumber" placeholder="Starter Number">
+        <button onclick="updateStarterNumber()">Update Starter Number</button>
+    </div>
+    <div>
+        <h2>Leaderboard</h2>
+        <div id="leaderboard"></div>
+    </div>
+    <div>
+        <h2>Results</h2>
+        <button onclick="getResults()">Get Results</button>
+        <div id="results"></div>
+    </div>
+</body>
+</html>
